@@ -593,12 +593,17 @@
       var section = document.getElementById(chapter.id);
       if (!prevFrame || !curFrame || !section) return;
 
-      // Animate the inner media layers, not the [data-media-frame]
-      // wrapper itself — the wrapper defines the section's own layout
-      // box, and its "overflow: hidden" is exactly what keeps the scale
-      // bump below from bleeding into neighboring chapters.
+      // Animate the poster/placeholder/scrim layers, but never the
+      // <video> element itself: transforming/filtering a video right as
+      // it's loading and calling .play() for the first time — exactly
+      // what's happening on the incoming chapter at this exact scroll
+      // position — can make Safari drop that play attempt entirely, so
+      // the video never starts. The other layers carry the same visual
+      // weight without ever touching playback state. The
+      // [data-media-frame] wrapper's "overflow: hidden" still keeps the
+      // scale bump below from bleeding into neighboring chapters.
       var targets = [prevFrame, curFrame].reduce(function (acc, frame) {
-        return acc.concat(Array.prototype.slice.call(frame.querySelectorAll("video, .chapter__poster, .media-placeholder")));
+        return acc.concat(Array.prototype.slice.call(frame.querySelectorAll(".chapter__poster, .media-placeholder, .chapter__scrim")));
       }, []);
 
       function whipPan() {
@@ -609,9 +614,11 @@
         gsap.killTweensOf(targets, "xPercent,scale,filter");
         gsap
           .timeline({
-            // These layers also carry a CSS "transition: transform 1.4s"
-            // (the scroll-reveal zoom) — left on, it would smear this fast
-            // whip into a slow 1.4s drift. Suspend it for just this tween.
+            // The poster/placeholder layers also carry a CSS
+            // "transition: transform 1.4s" (the scroll-reveal zoom) —
+            // left on, it would smear this fast whip into a slow 1.4s
+            // drift. Suspend it for just this tween (a no-op on the
+            // scrim, which has no such rule).
             onStart: function () { gsap.set(targets, { transition: "none" }); },
             onComplete: function () { gsap.set(targets, { transition: "" }); },
           })
