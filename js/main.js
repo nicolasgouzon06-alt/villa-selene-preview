@@ -233,13 +233,13 @@
 
     // Tag interactive elements so the cursor knows what to say.
     document.querySelectorAll(".chapter--scrubbed").forEach(function (el) {
-      el.setAttribute("data-cursor", "SCROLL");
+      el.setAttribute("data-cursor", "DÉFILER");
     });
     document.querySelectorAll(".chapter--loop").forEach(function (el) {
-      el.setAttribute("data-cursor", "VIEW");
+      el.setAttribute("data-cursor", "VOIR");
     });
     document.querySelectorAll(".cta, .nav__links a").forEach(function (el) {
-      el.setAttribute("data-cursor", "VIEW");
+      el.setAttribute("data-cursor", "VOIR");
     });
   }
 
@@ -692,10 +692,10 @@
     setupScroll(onScrollForNav);
 
     document.querySelectorAll(".chapter--scrubbed").forEach(function (el) {
-      el.setAttribute("data-cursor", "SCROLL");
+      el.setAttribute("data-cursor", "DÉFILER");
     });
     document.querySelectorAll(".chapter--loop").forEach(function (el) {
-      el.setAttribute("data-cursor", "VIEW");
+      el.setAttribute("data-cursor", "VOIR");
     });
 
     window.addEventListener("resize", function () {

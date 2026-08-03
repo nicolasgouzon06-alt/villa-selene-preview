@@ -41,10 +41,10 @@ window.CHAPTERS = [
     type: "scrubbed",
     video: "01-hero.mp4",
     poster: "poster.jpg",
-    eyebrow: "ARRIVAL",
+    eyebrow: "ARRIVÉE",
     title: "Villa Selene",
-    caption: "A private hilltop estate, revealed one breath at a time.",
-    cue: "Scroll to discover",
+    caption: "Un domaine privé sur les hauteurs, révélé souffle après souffle.",
+    cue: "Défilez pour découvrir",
     scrollVh: 300
   },
   {
@@ -53,9 +53,9 @@ window.CHAPTERS = [
     type: "loop",
     video: "02-salon.mp4",
     poster: "02-salon.jpg",
-    eyebrow: "THE LIVING ROOM",
-    title: "Where Light Lingers",
-    caption: "Sunlight moves through the room like a slow tide, gathering in every corner where the day begins and ends."
+    eyebrow: "LE SALON",
+    title: "Là où la lumière s'attarde",
+    caption: "La lumière glisse dans la pièce comme une marée lente, se posant dans chaque recoin où le jour commence et s'achève."
   },
   {
     number: "03",
@@ -63,21 +63,31 @@ window.CHAPTERS = [
     type: "loop",
     video: "03-salle-a-manger.mp4",
     poster: "03-salle-a-manger.jpg",
-    eyebrow: "Salle à manger",
-    title: "Where evenings gather, unhurried.",
+    eyebrow: "LA SALLE À MANGER",
+    title: "Là où les soirées s'attardent, sans hâte.",
+    transitionIn: "whip-pan"
+  },
+  {
+    number: "04",
+    id: "cave-a-vin",
+    type: "loop",
+    video: "04-cave-a-vin.mp4",
+    poster: "04-cave-a-vin.jpg",
+    eyebrow: "LA CAVE À VIN",
+    title: "Ici, le temps se compte en millésimes.",
     transitionIn: "whip-pan"
   }
 
   /* Add future rooms here, e.g.:
   {
-    number: "04",
-    id: "kitchen",
+    number: "05",
+    id: "cuisine",
     type: "loop",
-    video: "04-kitchen.mp4",
-    poster: "04-kitchen.jpg",
-    eyebrow: "THE KITCHEN",
-    title: "Made for Slow Mornings",
-    caption: "Stone counters, north light, and the quiet clatter of coffee at dawn."
+    video: "05-cuisine.mp4",
+    poster: "05-cuisine.jpg",
+    eyebrow: "LA CUISINE",
+    title: "Faite pour les matins tranquilles",
+    caption: "Plans de travail en pierre, lumière du nord, et le doux cliquetis du café à l'aube."
   },
   */
 ];

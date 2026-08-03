@@ -155,9 +155,11 @@ html.lenis.lenis-smooth { scroll-behavior: auto; }
 }
 
 .cursor__ring-label {
-  font-size: 9px;
+  /* Sized/spaced to fit longer French labels ("DÉFILER") as comfortably
+     as the shorter ones ("VOIR") inside the fixed 44px ring. */
+  font-size: 8px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.08em;
   color: var(--gold);
   text-transform: uppercase;
 }
