@@ -1,0 +1,630 @@
+/* =========================================================================
+   VILLA SELENE — cinematic scroll experience
+   Design system: warm ivory / charcoal / soft gold. Fraunces + Inter.
+   ========================================================================= */
+
+:root {
+  --ivory: #F5F0E8;
+  --charcoal: #1A1A1A;
+  --gold: #C9A96E;
+  --gold-soft: rgba(201, 169, 110, 0.35);
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --ease-luxury: cubic-bezier(0.22, 1, 0.36, 1);
+  --nav-h: 88px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: auto; /* Lenis owns smooth scrolling */
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--ivory);
+  color: var(--charcoal);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+body { min-height: 100vh; }
+
+img, video { max-width: 100%; display: block; }
+
+a { color: inherit; text-decoration: none; }
+
+h1, h2, h3, p { margin: 0; }
+
+::selection { background: var(--gold-soft); }
+
+/* Lenis sets this on <html> while smooth-scroll is engaged */
+html.lenis, html.lenis body { height: auto; }
+html.lenis.lenis-smooth { scroll-behavior: auto; }
+
+/* ============================= TYPE SCALE ============================= */
+
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--charcoal);
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: var(--gold);
+  display: inline-block;
+}
+
+.eyebrow--light { color: var(--ivory); }
+.eyebrow--light::before { background: var(--gold); }
+
+/* ============================= PRELOADER ============================= */
+
+#preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--ivory);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+}
+
+.preloader__word {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(28px, 5vw, 56px);
+  letter-spacing: 0.02em;
+  color: var(--charcoal);
+  display: flex;
+}
+
+.preloader__word .char {
+  opacity: 0;
+  transform: translateY(18px);
+  display: inline-block;
+}
+
+.preloader__rule {
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  max-width: 220px;
+}
+
+#curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: var(--charcoal);
+  transform: translateY(0);
+  pointer-events: none;
+}
+
+/* ============================= CUSTOM CURSOR ============================= */
+
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9997;
+  pointer-events: none;
+  mix-blend-mode: normal;
+  will-change: transform;
+}
+
+.cursor__dot {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  transition: opacity 0.2s var(--ease-luxury);
+}
+
+.cursor__ring {
+  position: absolute;
+  top: -22px;
+  left: -22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.3s var(--ease-luxury), transform 0.3s var(--ease-luxury);
+}
+
+.cursor__ring-label {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+#cursor.is-active .cursor__ring {
+  opacity: 1;
+  transform: scale(1);
+}
+
+#cursor.is-active .cursor__dot { opacity: 0; }
+
+/* Hidden on touch devices, or when the OS asks for less motion */
+.touch #cursor,
+.reduced-motion #cursor { display: none; }
+
+.touch, .touch * { cursor: auto !important; }
+
+/* ============================= NAV ============================= */
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(24px, 5vw, 64px);
+  background: transparent;
+  opacity: 0;
+  transform: translateY(-100%);
+  transition: transform 0.5s var(--ease-luxury), background-color 0.4s ease, opacity 0.4s ease;
+}
+
+.nav.is-visible { opacity: 1; transform: translateY(0); }
+.nav.is-hidden { transform: translateY(-100%); }
+.nav.is-scrolled { background: rgba(245, 240, 232, 0.82); backdrop-filter: blur(10px); }
+.nav.is-shrink { height: 64px; }
+
+.nav__mark {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+
+.nav__links {
+  display: flex;
+  gap: 32px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.nav__links a {
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.nav__links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.35s var(--ease-luxury);
+}
+
+.nav__links a:hover::after { width: 100%; }
+
+/* ============================= FIXED CHAPTER INDEX ============================= */
+
+.chapter-index {
+  position: fixed;
+  right: clamp(20px, 4vw, 48px);
+  bottom: clamp(20px, 4vw, 48px);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-variant-numeric: oldstyle-nums;
+  font-size: 14px;
+  color: var(--charcoal);
+  opacity: 0;
+  transition: opacity 0.4s ease, color 0.4s ease;
+}
+
+.chapter-index.is-visible { opacity: 0.85; }
+.chapter-index.on-dark { color: var(--ivory); }
+
+.chapter-index__current { position: relative; min-width: 1.4em; }
+.chapter-index__rule { width: 16px; height: 1px; background: var(--gold); }
+.chapter-index__total { opacity: 0.5; }
+
+/* ============================= CHAPTER LAYOUT ============================= */
+
+.chapter { position: relative; }
+
+/* -- Scrubbed chapter: pinned, video position mapped to scroll -- */
+
+/* No fixed height here: GSAP's pin spacer determines the section's real
+   height (100vh normally, or the full scrollVh distance while pinned) —
+   a fixed height would clip the spacer and break the scroll-distance
+   reservation for every later chapter. Mobile's static fallback (no
+   pin) sets an explicit height below since there's no spacer there. */
+
+.chapter__pin-wrap {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--charcoal);
+}
+
+.media-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.media-frame video,
+.media-frame .media-placeholder,
+.media-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.08);
+  transition: transform 1.4s var(--ease-luxury);
+}
+
+.media-frame.is-revealed video,
+.media-frame.is-revealed .media-placeholder,
+.media-frame.is-revealed img {
+  transform: scale(1);
+}
+
+/* Layering: placeholder (always present) < poster <img> < video.
+   Each fades in independently as it becomes ready; the placeholder
+   fades out the moment either a poster or the video is confirmed. */
+.media-placeholder,
+.chapter__poster,
+.chapter__video {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.media-frame .media-placeholder { opacity: 1; }
+.media-frame.poster-ready .chapter__poster { opacity: 1; }
+.media-frame.poster-ready .media-placeholder,
+.media-frame.video-ready .media-placeholder { opacity: 0; }
+.media-frame.video-ready .chapter__video { opacity: 1; }
+.media-frame.video-ready .chapter__poster { opacity: 0; }
+
+/* Graceful placeholder for a missing video/poster: soft gradient + shimmer */
+.media-placeholder {
+  background: linear-gradient(135deg, #2a2a28 0%, #1a1a1a 45%, #2f2b22 100%);
+  overflow: hidden;
+}
+
+.media-placeholder::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(201, 169, 110, 0.14) 48%,
+    rgba(201, 169, 110, 0.22) 50%,
+    rgba(201, 169, 110, 0.14) 52%,
+    transparent 70%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 3.2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+.chapter__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 35%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0.55) 100%);
+  pointer-events: none;
+}
+
+.chapter__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  color: var(--ivory);
+}
+
+.chapter__headline {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(48px, 10vw, 150px);
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  margin-top: 22px;
+}
+
+/* Generic masked-line reveal: outer wraps the mask (overflow hidden),
+   inner carries the entrance transform. Kept generic (not scoped to one
+   headline) so hero, loop, and future chapters all share it. */
+.line,
+.mask-line {
+  overflow: hidden;
+  display: block;
+}
+
+.line span,
+.mask-line span {
+  display: block;
+}
+
+/* Opacity only here — the translateY starting offset is set at runtime
+   via gsap.set(). Baking a percentage transform into this stylesheet
+   rule would get "frozen" into GSAP's transform cache as a permanent
+   extra offset the moment it first touches yPercent on the element,
+   stacking with (rather than being replaced by) the animated value. */
+.line span { opacity: 0; }
+.mask-line span { opacity: 0; }
+
+.progress-hairline {
+  position: absolute;
+  left: 50%;
+  bottom: 96px;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 1px;
+  background: rgba(255,255,255,0.22);
+  z-index: 2;
+}
+
+.progress-hairline__fill {
+  height: 100%;
+  width: 0%;
+  background: var(--gold);
+}
+
+.scroll-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 44px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 2;
+  color: var(--ivory);
+  opacity: 0.85;
+}
+
+.scroll-cue__line {
+  width: 1px;
+  height: 34px;
+  background: rgba(255,255,255,0.25);
+  overflow: hidden;
+  position: relative;
+}
+
+.scroll-cue__line::after {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--gold);
+  animation: cue-fall 2.2s ease-in-out infinite;
+}
+
+@keyframes cue-fall {
+  0% { top: -100%; }
+  60% { top: 100%; }
+  100% { top: 100%; }
+}
+
+.scroll-cue__label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* -- Loop chapter: full-bleed autoplay video with parallax + scrim -- */
+
+.chapter--loop {
+  min-height: 130vh;
+  display: flex;
+  align-items: center;
+  padding: 14vh 0;
+}
+
+.chapter--loop .media-frame {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.chapter--loop .media-frame video,
+.chapter--loop .media-frame .media-placeholder,
+.chapter--loop .media-frame img {
+  /* Parallax frame is taller than viewport so it can travel at 0.85x */
+  height: 118%;
+  top: -9%;
+}
+
+.chapter__content {
+  position: relative;
+  z-index: 2;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 24px;
+  color: var(--ivory);
+}
+
+.chapter__poetic {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(28px, 4.2vw, 46px);
+  line-height: 1.25;
+  margin-top: 22px;
+}
+
+.chapter__body {
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 65ch;
+  color: rgba(245,240,232,0.82);
+  margin-top: 20px;
+}
+
+/* ============================= FOOTER ============================= */
+
+.footer {
+  background: var(--charcoal);
+  color: var(--ivory);
+  padding: 18vh 24px 8vh;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+.footer__eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.footer__headline {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1.15;
+}
+
+.cta {
+  position: relative;
+  padding: 18px 46px;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ivory);
+}
+
+.cta::before,
+.cta::after,
+.cta .cta__label::before,
+.cta .cta__label::after {
+  content: "";
+  position: absolute;
+  background: var(--gold);
+  transition: transform 0.5s var(--ease-luxury);
+}
+
+/* Border drawn as 4 hairlines that grow outward from the button on hover:
+   top/bottom live on .cta itself, left/right on .cta__label (offset back
+   out to the parent's padded edges) since a single element only gets two
+   pseudo-elements. */
+.cta::before { top: 0; left: 0; width: 100%; height: 1px; transform: scaleX(0); transform-origin: left; }
+.cta::after { bottom: 0; left: 0; width: 100%; height: 1px; transform: scaleX(0); transform-origin: right; }
+.cta .cta__label { position: relative; }
+.cta .cta__label::before { top: -18px; left: -46px; width: 1px; height: calc(100% + 36px); transform: scaleY(0); transform-origin: top; }
+.cta .cta__label::after { top: -18px; right: -46px; width: 1px; height: calc(100% + 36px); transform: scaleY(0); transform-origin: bottom; }
+
+.cta:hover::before,
+.cta:hover::after { transform: scaleX(1); }
+
+.cta:hover .cta__label::before,
+.cta:hover .cta__label::after { transform: scaleY(1); }
+
+.footer__meta {
+  margin-top: 12px;
+  font-size: 13px;
+  color: rgba(245,240,232,0.55);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer__meta a:hover { color: var(--gold); }
+
+/* ============================= RESPONSIVE ============================= */
+
+@media (max-width: 768px) {
+  .chapter--scrubbed { height: 100svh; }
+  .chapter__pin-wrap { height: 100svh; }
+  .chapter__headline { font-size: clamp(38px, 12vw, 64px); }
+  .progress-hairline { bottom: 76px; width: 120px; }
+  .nav__links { display: none; }
+  .chapter--loop { min-height: auto; flex-direction: column; padding: 10vh 0; }
+  /* Media becomes an in-flow block above the text instead of a full-bleed
+     background. Its video/poster/placeholder children stay position:absolute
+     (from the shared base rule) so they keep crossfading on top of each
+     other inside this box rather than stacking as three separate blocks. */
+  .chapter--loop .media-frame { position: relative; height: 70vh; inset: auto; }
+  .chapter__content { margin-top: -14vh; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35) 40%); padding: 8vh 24px 0; }
+
+  /* Mobile Ken Burns fallback for scrubbed sections (poster only) */
+  .media-frame.mobile-kenburns img {
+    animation: kenburns 14s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.12); }
+}
+
+/* ============================= REDUCED MOTION ============================= */
+
+.reduced-motion .line span,
+.reduced-motion .mask-line span {
+  transform: none;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+.reduced-motion .media-frame video,
+.reduced-motion .media-frame .media-placeholder,
+.reduced-motion .media-frame img {
+  transform: none !important;
+  transition: opacity 0.6s ease;
+}
+
+.reduced-motion .media-placeholder::after { animation: none; }
+.reduced-motion .scroll-cue__line::after { animation: none; }
+.reduced-motion #curtain { display: none; }
