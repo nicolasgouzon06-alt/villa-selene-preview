@@ -103,6 +103,7 @@ Field reference:
 | `caption`  | loop, optional  | Supporting body copy under the poetic title                        |
 | `cue`      | scrubbed, optional | Scroll-cue label (used on the hero: "Scroll to discover")       |
 | `scrollVh` | scrubbed, optional | Pin distance in vh, default `300`                                |
+| `transitionIn` | both, optional | `"whip-pan"` plays a brief directional-blur whip pan across this chapter and the one right before it, exactly when scroll crosses between them (either direction) — a "walking through the space" cut instead of a plain one. Omit for a plain cut. |
 
 Order in the array is the order chapters appear on the page. Reload the
 page after saving — there's no build step to run.

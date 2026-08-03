@@ -541,17 +541,19 @@
     io.observe(section);
 
     // Masked reveal of eyebrow + poetic title + body on scroll-into-view.
+    // (caption/body is optional — guard against tweening an empty NodeList
+    // when a chapter has no caption, which GSAP otherwise warns about.)
     if (HAS_GSAP) {
       gsap.set([eyebrow], { opacity: 0, y: 16 });
       gsap.set(poeticLines, { y: "105%", opacity: 0 });
-      gsap.set(bodyLines, { y: "105%", opacity: 0 });
+      if (bodyLines.length) gsap.set(bodyLines, { y: "105%", opacity: 0 });
       ScrollTrigger.create({
         trigger: content,
         start: "top 78%",
         onEnter: function () {
           gsap.to(eyebrow, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
           gsap.to(poeticLines, { y: "0%", opacity: 1, duration: 0.9, ease: "power3.out", stagger: 0.08, delay: 0.1 });
-          gsap.to(bodyLines, { y: "0%", opacity: 1, duration: 0.7, ease: "power3.out", stagger: 0.05, delay: 0.35 });
+          if (bodyLines.length) gsap.to(bodyLines, { y: "0%", opacity: 1, duration: 0.7, ease: "power3.out", stagger: 0.05, delay: 0.35 });
         },
       });
 
@@ -573,7 +575,61 @@
   }
 
   /* =====================================================================
-     9. LENIS <-> SCROLLTRIGGER WIRING
+     9. CHAPTER TRANSITIONS — optional whip-pan between two adjacent chapters
+     ===================================================================== */
+
+  // Approximates a directional motion-blur whip pan with a synchronized
+  // blur + horizontal snap on both chapters' media, right as scroll crosses
+  // the boundary between them (either direction) — true anisotropic blur
+  // needs an SVG filter and isn't worth the complexity for a 150-250ms cue.
+  function setupChapterTransitions() {
+    if (!HAS_GSAP || PREFERS_REDUCED) return;
+
+    CHAPTERS.forEach(function (chapter, i) {
+      if (chapter.transitionIn !== "whip-pan" || i === 0) return;
+
+      var prevFrame = document.querySelector("#" + CHAPTERS[i - 1].id + " [data-media-frame]");
+      var curFrame = document.querySelector("#" + chapter.id + " [data-media-frame]");
+      var section = document.getElementById(chapter.id);
+      if (!prevFrame || !curFrame || !section) return;
+
+      // Animate the inner media layers, not the [data-media-frame]
+      // wrapper itself — the wrapper defines the section's own layout
+      // box, and its "overflow: hidden" is exactly what keeps the scale
+      // bump below from bleeding into neighboring chapters.
+      var targets = [prevFrame, curFrame].reduce(function (acc, frame) {
+        return acc.concat(Array.prototype.slice.call(frame.querySelectorAll("video, .chapter__poster, .media-placeholder")));
+      }, []);
+
+      function whipPan() {
+        // xPercent + a matching scale bump (rather than fixed px) so the
+        // brief horizontal snap never reveals an edge gap, at any viewport
+        // width — the 5%-per-side overscan from scale:1.1 comfortably
+        // covers the 4% shift.
+        gsap.killTweensOf(targets, "xPercent,scale,filter");
+        gsap
+          .timeline({
+            // These layers also carry a CSS "transition: transform 1.4s"
+            // (the scroll-reveal zoom) — left on, it would smear this fast
+            // whip into a slow 1.4s drift. Suspend it for just this tween.
+            onStart: function () { gsap.set(targets, { transition: "none" }); },
+            onComplete: function () { gsap.set(targets, { transition: "" }); },
+          })
+          .to(targets, { xPercent: -4, scale: 1.1, filter: "blur(16px)", duration: 0.08, ease: "power1.in" })
+          .to(targets, { xPercent: 0, scale: 1, filter: "blur(0px)", duration: 0.14, ease: "power2.out" });
+      }
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top 55%",
+        onEnter: whipPan,
+        onEnterBack: whipPan,
+      });
+    });
+  }
+
+  /* =====================================================================
+     10. LENIS <-> SCROLLTRIGGER WIRING
      ===================================================================== */
 
   function setupScroll(onScrollForNav) {
@@ -622,6 +678,7 @@
     });
 
     startScrubLoop();
+    setupChapterTransitions();
 
     var onScrollForNav = setupNav();
     setupChapterIndex();

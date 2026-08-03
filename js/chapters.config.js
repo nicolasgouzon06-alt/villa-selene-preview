@@ -27,6 +27,11 @@
  *   caption     Short poetic line / body copy.
  *   cue         Optional scroll-cue label (hero only, typically).
  *   scrollVh    Scrubbed chapters only — pin distance in vh (default 300).
+ *   transitionIn  Optional. "whip-pan" plays a brief directional-blur whip
+ *                 pan across this chapter and the one immediately before
+ *                 it in this array, the moment scroll crosses between them
+ *                 (either direction) — reads as walking through the space
+ *                 rather than cutting to a new scene. Omit for a plain cut.
  */
 
 window.CHAPTERS = [
@@ -51,15 +56,25 @@ window.CHAPTERS = [
     eyebrow: "THE LIVING ROOM",
     title: "Where Light Lingers",
     caption: "Sunlight moves through the room like a slow tide, gathering in every corner where the day begins and ends."
+  },
+  {
+    number: "03",
+    id: "salle-a-manger",
+    type: "loop",
+    video: "03-salle-a-manger.mp4",
+    poster: "03-salle-a-manger.jpg",
+    eyebrow: "Salle à manger",
+    title: "Where evenings gather, unhurried.",
+    transitionIn: "whip-pan"
   }
 
   /* Add future rooms here, e.g.:
   {
-    number: "03",
+    number: "04",
     id: "kitchen",
     type: "loop",
-    video: "03-kitchen.mp4",
-    poster: "03-kitchen.jpg",
+    video: "04-kitchen.mp4",
+    poster: "04-kitchen.jpg",
     eyebrow: "THE KITCHEN",
     title: "Made for Slow Mornings",
     caption: "Stone counters, north light, and the quiet clatter of coffee at dawn."
