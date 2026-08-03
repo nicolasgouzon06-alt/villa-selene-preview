@@ -48,21 +48,9 @@
     });
   }
 
-  // Each word becomes its own masked "line" that rises into view — used
-  // for the big Fraunces headlines (hero title + loop poetic title).
-  function wrapWordLines(text) {
-    return text
-      .split(" ")
-      .map(function (word) {
-        return '<span class="line"><span>' + escapeHtml(word) + "</span></span>";
-      })
-      .join(" ");
-  }
-
-  // Greedily wraps body copy into ~42-char chunks, each its own masked line.
-  function wrapPhraseLines(text, maxLen) {
-    maxLen = maxLen || 42;
-    var words = text.split(" ");
+  // Greedily packs words into chunks no longer than maxLen characters,
+  // never splitting a word. Shared by both masked-line wrappers below.
+  function packWords(words, maxLen) {
     var lines = [];
     var current = "";
     words.forEach(function (w) {
@@ -75,6 +63,27 @@
       }
     });
     if (current) lines.push(current);
+    return lines;
+  }
+
+  // Used for the big Fraunces headlines (hero title + loop poetic title).
+  // Short phrases (hero names, 2-3 word titles like "Where Light Lingers")
+  // get the dramatic one-word-per-line stack; longer poetic lines (a full
+  // sentence) instead pack ~3-4 words per line — one word per line for a
+  // 6-7 word sentence reads as broken, not dramatic.
+  function wrapWordLines(text) {
+    var words = text.split(" ");
+    var lines = words.length <= 3 ? words : packWords(words, 24);
+    return lines
+      .map(function (line) {
+        return '<span class="line"><span>' + escapeHtml(line) + "</span></span>";
+      })
+      .join(" ");
+  }
+
+  // Greedily wraps body copy into ~42-char chunks, each its own masked line.
+  function wrapPhraseLines(text, maxLen) {
+    var lines = packWords(text.split(" "), maxLen || 42);
     return lines
       .map(function (line) {
         return '<span class="mask-line"><span>' + escapeHtml(line) + "</span></span>";
