@@ -461,31 +461,16 @@ html.lenis.lenis-smooth { scroll-behavior: auto; }
   text-transform: uppercase;
 }
 
-/* -- Loop chapter: full-bleed autoplay video with parallax + scrim -- */
-
-.chapter--loop {
-  min-height: 130vh;
-  display: flex;
-  align-items: center;
-  padding: 14vh 0;
-}
-
-.chapter--loop .media-frame {
-  position: absolute;
-  inset: 0;
-  will-change: transform;
-}
-
-.chapter--loop .media-frame video,
-.chapter--loop .media-frame .media-placeholder,
-.chapter--loop .media-frame img {
-  /* Parallax frame is taller than viewport so it can travel at 0.85x */
-  height: 118%;
-  top: -9%;
-}
+/* -- Room chapter: same pinned/scrubbed mechanics as the hero, just a
+   smaller eyebrow + poetic-line + optional body overlay instead of the
+   full centered headline. -- */
 
 .chapter__content {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 2;
   max-width: 640px;
   margin: 0 auto;
@@ -592,15 +577,8 @@ html.lenis.lenis-smooth { scroll-behavior: auto; }
   .chapter__headline { font-size: clamp(38px, 12vw, 64px); }
   .progress-hairline { bottom: 76px; width: 120px; }
   .nav__links { display: none; }
-  .chapter--loop { min-height: auto; flex-direction: column; padding: 10vh 0; }
-  /* Media becomes an in-flow block above the text instead of a full-bleed
-     background. Its video/poster/placeholder children stay position:absolute
-     (from the shared base rule) so they keep crossfading on top of each
-     other inside this box rather than stacking as three separate blocks. */
-  .chapter--loop .media-frame { position: relative; height: 70vh; inset: auto; }
-  .chapter__content { margin-top: -14vh; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.35) 40%); padding: 8vh 24px 0; }
 
-  /* Mobile Ken Burns fallback for scrubbed sections (poster only) */
+  /* Mobile Ken Burns fallback for every chapter (poster only, no pin) */
   .media-frame.mobile-kenburns img {
     animation: kenburns 14s ease-in-out infinite alternate;
   }

@@ -91,56 +91,62 @@
       .join("");
   }
 
-  function buildScrubbedChapter(chapter, idx) {
+  // The media stack + progress hairline are identical for every chapter —
+  // only the text overlay differs between the hero and "room" layouts.
+  function buildMediaAndHairline() {
     return (
-      '<section class="chapter chapter--scrubbed" id="' + chapter.id + '" data-chapter-number="' + chapter.number + '">' +
+      '<div class="media-frame" data-media-frame>' +
+        '<div class="media-placeholder" data-placeholder></div>' +
+        '<img class="chapter__poster" data-poster-img alt="" />' +
+        '<video class="chapter__video" data-video muted playsinline preload="auto"></video>' +
+        '<div class="chapter__scrim"></div>' +
+      "</div>" +
+      '<div class="progress-hairline" data-progress-hairline>' +
+        '<div class="progress-hairline__fill" data-progress-fill></div>' +
+      "</div>"
+    );
+  }
+
+  // First chapter: full-bleed centered headline + optional scroll cue.
+  function buildHeroLayout(chapter) {
+    return (
+      '<div class="chapter__overlay">' +
+        '<span class="eyebrow eyebrow--light">' + escapeHtml(chapter.eyebrow) + "</span>" +
+        '<h1 class="chapter__headline" data-headline>' + wrapWordLines(chapter.title) + "</h1>" +
+        (chapter.cue
+          ? '<div class="scroll-cue" data-scroll-cue><span class="scroll-cue__line"></span><span class="scroll-cue__label">' +
+            escapeHtml(chapter.cue) +
+            "</span></div>"
+          : "") +
+      "</div>"
+    );
+  }
+
+  // Every other chapter: eyebrow + poetic line + optional body copy.
+  function buildRoomLayout(chapter) {
+    return (
+      '<div class="chapter__content">' +
+        '<span class="eyebrow eyebrow--light" data-eyebrow>' + escapeHtml(chapter.number) + " — " + escapeHtml(chapter.eyebrow) + "</span>" +
+        '<h2 class="chapter__poetic" data-poetic>' + wrapWordLines(chapter.title) + "</h2>" +
+        (chapter.caption
+          ? '<p class="chapter__body" data-body>' + wrapPhraseLines(chapter.caption) + "</p>"
+          : "") +
+      "</div>"
+    );
+  }
+
+  function buildChapter(chapter, idx) {
+    return (
+      '<section class="chapter chapter--scrubbed' + (idx === 0 ? " chapter--hero" : " chapter--room") + '" id="' + chapter.id + '" data-chapter-number="' + chapter.number + '">' +
         '<div class="chapter__pin-wrap" data-pin-wrap>' +
-          '<div class="media-frame" data-media-frame>' +
-            '<div class="media-placeholder" data-placeholder></div>' +
-            '<img class="chapter__poster" data-poster-img alt="" />' +
-            '<video class="chapter__video" data-video muted playsinline preload="auto"></video>' +
-            '<div class="chapter__scrim"></div>' +
-          "</div>" +
-          '<div class="chapter__overlay">' +
-            '<span class="eyebrow eyebrow--light">' + escapeHtml(chapter.eyebrow) + "</span>" +
-            '<h1 class="chapter__headline" data-headline>' + wrapWordLines(chapter.title) + "</h1>" +
-            '<div class="progress-hairline" data-progress-hairline>' +
-              '<div class="progress-hairline__fill" data-progress-fill></div>' +
-            "</div>" +
-            (chapter.cue
-              ? '<div class="scroll-cue" data-scroll-cue><span class="scroll-cue__line"></span><span class="scroll-cue__label">' +
-                escapeHtml(chapter.cue) +
-                "</span></div>"
-              : "") +
-          "</div>" +
+          buildMediaAndHairline() +
+          (idx === 0 ? buildHeroLayout(chapter) : buildRoomLayout(chapter)) +
         "</div>" +
       "</section>"
     );
   }
 
-  function buildLoopChapter(chapter, idx) {
-    return (
-      '<section class="chapter chapter--loop" id="' + chapter.id + '" data-chapter-number="' + chapter.number + '">' +
-        '<div class="media-frame" data-media-frame data-parallax>' +
-          '<div class="media-placeholder" data-placeholder></div>' +
-          '<img class="chapter__poster" data-poster-img alt="" />' +
-          '<video class="chapter__video" data-video muted loop playsinline preload="none"></video>' +
-          '<div class="chapter__scrim"></div>' +
-        "</div>" +
-        '<div class="chapter__content">' +
-          '<span class="eyebrow eyebrow--light" data-eyebrow>' + escapeHtml(chapter.number) + " — " + escapeHtml(chapter.eyebrow) + "</span>" +
-          '<h2 class="chapter__poetic" data-poetic>' + wrapWordLines(chapter.title) + "</h2>" +
-          (chapter.caption
-            ? '<p class="chapter__body" data-body>' + wrapPhraseLines(chapter.caption) + "</p>"
-            : "") +
-        "</div>" +
-      "</section>"
-    );
-  }
-
-  var markup = CHAPTERS.map(function (chapter, idx) {
-    return chapter.type === "scrubbed" ? buildScrubbedChapter(chapter, idx) : buildLoopChapter(chapter, idx);
-  }).join("");
+  var markup = CHAPTERS.map(buildChapter).join("");
 
   chaptersRoot.innerHTML = markup;
 
@@ -243,9 +249,6 @@
     // Tag interactive elements so the cursor knows what to say.
     document.querySelectorAll(".chapter--scrubbed").forEach(function (el) {
       el.setAttribute("data-cursor", "DÉFILER");
-    });
-    document.querySelectorAll(".chapter--loop").forEach(function (el) {
-      el.setAttribute("data-cursor", "VOIR");
     });
     document.querySelectorAll(".cta, .nav__links a").forEach(function (el) {
       el.setAttribute("data-cursor", "VOIR");
@@ -404,20 +407,28 @@
 
   var scrubStates = [];
 
-  function wireScrubbedChapter(chapter) {
+  function wireScrubbedChapter(chapter, idx) {
+    var isHero = idx === 0;
     var section = document.getElementById(chapter.id);
     var media = wireMedia(section, chapter);
     var pinWrap = section.querySelector("[data-pin-wrap]");
-    var headline = section.querySelector("[data-headline]");
-    // Outer .line wrappers carry the scroll-driven fade-OUT; the inner
-    // spans carry the load-triggered entrance. Separate elements so the
-    // two animations never fight over the same inline styles.
+    var headline = section.querySelector("[data-headline], [data-poetic]");
+    var body = section.querySelector("[data-body]"); // room chapters, optional
+    var eyebrow = section.querySelector("[data-eyebrow]"); // room chapters only
+    // Outer .line/.mask-line wrappers carry the scroll-driven fade-OUT;
+    // the inner spans carry the entrance. Separate elements so the two
+    // animations never fight over the same inline styles.
     var outerLines = headline.querySelectorAll(".line");
     var innerSpans = headline.querySelectorAll(".line span");
+    var bodyOuterLines = body ? body.querySelectorAll(".mask-line") : [];
+    var bodyInnerSpans = body ? body.querySelectorAll(".mask-line span") : [];
     var fill = section.querySelector("[data-progress-fill]");
     var cue = section.querySelector("[data-scroll-cue]");
     var hairline = section.querySelector("[data-progress-hairline]");
 
+    // Every chapter loads its video eagerly (not lazily) since scrubbing
+    // needs it seekable as soon as the pin engages, never autoplays or
+    // loops — position is driven entirely by scroll.
     if (chapter.video) {
       media.video.src = VIDEO_BASE + chapter.video;
       media.video.addEventListener("loadeddata", function () {
@@ -433,9 +444,9 @@
       video: media.video,
     };
 
-    // Headline entrance: fades/rises in on load, as the descent plays —
-    // independent of scroll position (spec: happens "as the video plays",
-    // i.e. right away, not gated behind the user scrolling first).
+    // Text entrance: fades/rises in as the chapter's pin engages (the
+    // hero plays it immediately on load instead, since it's already
+    // in view before any scrolling happens).
     function playEntrance() {
       if (HAS_GSAP) {
         // gsap.set() first: GSAP's yPercent tracking needs an explicit
@@ -443,13 +454,24 @@
         // `transform: translateY(110%)` rule alone.
         gsap.set(innerSpans, { yPercent: 110, opacity: 0 });
         gsap.to(innerSpans, { yPercent: 0, opacity: 1, duration: 1.1, ease: "power3.out", stagger: 0.08, delay: 0.3 });
+        if (bodyInnerSpans.length) {
+          gsap.set(bodyInnerSpans, { yPercent: 105, opacity: 0 });
+          gsap.to(bodyInnerSpans, { yPercent: 0, opacity: 1, duration: 0.9, ease: "power3.out", stagger: 0.06, delay: 0.45 });
+        }
+        if (eyebrow) {
+          gsap.set(eyebrow, { opacity: 0, y: 16 });
+          gsap.to(eyebrow, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", delay: 0.15 });
+        }
       } else {
         innerSpans.forEach(function (s) { s.style.transform = "none"; s.style.opacity = 1; });
+        bodyInnerSpans.forEach(function (s) { s.style.transform = "none"; s.style.opacity = 1; });
+        if (eyebrow) eyebrow.style.opacity = 1;
       }
     }
 
-    // Scroll-driven fade-out only: as the building is revealed (~30-46%
-    // of the pin's progress) the headline lifts and dissolves.
+    // Scroll-driven fade-out only: as the room is revealed (~30-46% of
+    // the pin's progress) the text lifts and dissolves, clearing the
+    // frame before the video scrubs to its end and the pin releases.
     function applyChoreography(p) {
       var outT = Math.max(0, Math.min(1, (p - 0.3) / 0.16));
       outerLines.forEach(function (line, i) {
@@ -457,6 +479,12 @@
         line.style.opacity = String(1 - localOut);
         line.style.transform = "translateY(" + -24 * localOut + "%)";
       });
+      bodyOuterLines.forEach(function (line, i) {
+        var localOut = Math.max(0, Math.min(1, outT - i * 0.04));
+        line.style.opacity = String(1 - localOut);
+        line.style.transform = "translateY(" + -24 * localOut + "%)";
+      });
+      if (eyebrow) eyebrow.style.opacity = String(1 - outT);
       if (fill) fill.style.width = Math.round(p * 100) + "%";
       if (cue) cue.style.opacity = String(Math.max(0, 1 - p / 0.05));
     }
@@ -473,8 +501,8 @@
       return;
     }
 
-    playEntrance();
     applyChoreography(0);
+    if (isHero) playEntrance();
 
     ScrollTrigger.create({
       trigger: section,
@@ -482,6 +510,8 @@
       end: "+=" + (chapter.scrollVh || 300) + "%",
       pin: pinWrap,
       pinSpacing: true,
+      onEnter: isHero ? undefined : playEntrance,
+      onEnterBack: isHero ? undefined : playEntrance,
       onUpdate: function (self) {
         state.target = self.progress;
         applyChoreography(self.progress);
@@ -511,80 +541,7 @@
   }
 
   /* =====================================================================
-     8. LOOP CHAPTER — lazy IO play/pause, parallax, masked reveal
-     ===================================================================== */
-
-  function wireLoopChapter(chapter) {
-    var section = document.getElementById(chapter.id);
-    var media = wireMedia(section, chapter);
-    var frame = media.frame;
-    var video = media.video;
-    var content = section.querySelector(".chapter__content");
-    var eyebrow = section.querySelector("[data-eyebrow]");
-    var poeticLines = section.querySelectorAll("[data-poetic] .line span");
-    var bodyLines = section.querySelectorAll("[data-body] .mask-line span");
-
-    var loaded = false;
-    var io = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (!video || !chapter.video) return;
-          if (entry.isIntersecting) {
-            if (!loaded) {
-              loaded = true;
-              video.src = VIDEO_BASE + chapter.video;
-              video.addEventListener("loadeddata", function () {
-                frame.classList.add("video-ready");
-              });
-            }
-            if (entry.intersectionRatio >= 0.5) {
-              video.play().catch(function () {});
-            }
-          } else {
-            video.pause();
-          }
-        });
-      },
-      { threshold: [0, 0.5] }
-    );
-    io.observe(section);
-
-    // Masked reveal of eyebrow + poetic title + body on scroll-into-view.
-    // (caption/body is optional — guard against tweening an empty NodeList
-    // when a chapter has no caption, which GSAP otherwise warns about.)
-    if (HAS_GSAP) {
-      gsap.set([eyebrow], { opacity: 0, y: 16 });
-      gsap.set(poeticLines, { y: "105%", opacity: 0 });
-      if (bodyLines.length) gsap.set(bodyLines, { y: "105%", opacity: 0 });
-      ScrollTrigger.create({
-        trigger: content,
-        start: "top 78%",
-        onEnter: function () {
-          gsap.to(eyebrow, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" });
-          gsap.to(poeticLines, { y: "0%", opacity: 1, duration: 0.9, ease: "power3.out", stagger: 0.08, delay: 0.1 });
-          if (bodyLines.length) gsap.to(bodyLines, { y: "0%", opacity: 1, duration: 0.7, ease: "power3.out", stagger: 0.05, delay: 0.35 });
-        },
-      });
-
-      // Parallax: media travels at ~0.85x scroll speed (15% counter-drift).
-      if (!PREFERS_REDUCED) {
-        gsap.to(frame, {
-          yPercent: 12,
-          ease: "none",
-          scrollTrigger: { trigger: section, start: "top bottom", end: "bottom top", scrub: true },
-        });
-      }
-    } else {
-      eyebrow.style.opacity = 1;
-      poeticLines.forEach(function (s) { s.style.transform = "none"; s.style.opacity = 1; });
-      bodyLines.forEach(function (s) { s.style.transform = "none"; s.style.opacity = 1; });
-    }
-
-    if (!chapter.video) video && video.remove();
-  }
-
-  /* =====================================================================
-     9. CHAPTER TRANSITIONS — optional whip-pan between two adjacent chapters
+     8. CHAPTER TRANSITIONS — optional whip-pan between two adjacent chapters
      ===================================================================== */
 
   // Approximates a directional motion-blur whip pan with a synchronized
@@ -645,7 +602,7 @@
   }
 
   /* =====================================================================
-     10. LENIS <-> SCROLLTRIGGER WIRING
+     9. LENIS <-> SCROLLTRIGGER WIRING
      ===================================================================== */
 
   function setupScroll(onScrollForNav) {
@@ -688,10 +645,7 @@
   function init() {
     setupCursor();
 
-    CHAPTERS.forEach(function (chapter) {
-      if (chapter.type === "scrubbed") wireScrubbedChapter(chapter);
-      else wireLoopChapter(chapter);
-    });
+    CHAPTERS.forEach(wireScrubbedChapter);
 
     startScrubLoop();
     setupChapterTransitions();
@@ -699,13 +653,6 @@
     var onScrollForNav = setupNav();
     setupChapterIndex();
     setupScroll(onScrollForNav);
-
-    document.querySelectorAll(".chapter--scrubbed").forEach(function (el) {
-      el.setAttribute("data-cursor", "DÉFILER");
-    });
-    document.querySelectorAll(".chapter--loop").forEach(function (el) {
-      el.setAttribute("data-cursor", "VOIR");
-    });
 
     window.addEventListener("resize", function () {
       if (HAS_GSAP) ScrollTrigger.refresh();

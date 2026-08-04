@@ -33,9 +33,9 @@ Drop files straight into `assets/video/`, using the exact filenames
 referenced in `js/chapters.config.js`:
 
 ```
-assets/video/01-hero.mp4     aerial descent — scrubbed hero chapter
+assets/video/01-hero.mp4     aerial descent — hero chapter
 assets/video/poster.jpg      first frame of 01-hero.mp4 (instant-load poster)
-assets/video/02-salon.mp4    living room walk-through — autoplay loop chapter
+assets/video/02-salon.mp4    living room walk-through — room chapter
 assets/video/02-salon.jpg    a still frame from 02-salon.mp4
 ```
 
@@ -47,8 +47,9 @@ under the same name and reload — no code changes needed.
 
 ### Re-encoding video for smooth scroll-scrubbing
 
-Scroll-scrubbed video (the hero) needs every frame to be a keyframe, or
-seeking during scroll looks choppy. Re-encode any source video with:
+Every chapter's video is scrubbed (position mapped to scroll, never
+autoplayed), which needs every frame to be a keyframe or seeking looks
+choppy. Re-encode any source video with:
 
 ```bash
 ffmpeg -i in.mp4 -vf scale=1920:-2 -g 1 -crf 20 -movflags +faststart -an out.mp4
@@ -59,8 +60,9 @@ ffmpeg -i in.mp4 -vf scale=1920:-2 -g 1 -crf 20 -movflags +faststart -an out.mp4
 - `-movflags +faststart` — moves metadata to the front so playback can start before the full file downloads
 - `-an` — strips audio (every video here is muted anyway)
 
-Autoplay loop videos (the living room) don't need `-g 1` since they just
-play normally — a standard web-optimized export is fine.
+`-g 1` produces an all-intra file, which is noticeably bigger than a
+normal web export — worth it here since every chapter needs to seek
+cleanly, not just the hero.
 
 ### Generating a poster from a video's first frame
 
@@ -72,20 +74,28 @@ ffmpeg -i 01-hero.mp4 -vframes 1 -q:v 2 poster.jpg
 
 Open `js/chapters.config.js` and add an object to the `CHAPTERS` array —
 that's the entire integration surface. `main.js` loops over this array to
-generate the DOM, wire up video/poster loading, pinning (for `scrubbed`
-chapters), parallax + lazy autoplay (for `loop` chapters), and all the
-text choreography. Nothing elsewhere needs to change.
+generate the DOM, wire up video/poster loading, pinning + scroll-scrubbing,
+and all the text choreography. Nothing elsewhere needs to change.
+
+The **first** entry in the array gets the full-bleed centered "hero"
+layout (giant headline, optional scroll cue). Every other entry gets the
+"room" layout (small eyebrow + poetic line + optional body copy). Both
+layouts share the exact same pin/scrub mechanics: the chapter is pinned
+to the viewport, its video's `currentTime` is mapped to scroll progress
+inside that pin, and the pin only releases into the next chapter once
+the video has scrubbed through to its end.
 
 ```js
 {
-  number: "03",
-  id: "kitchen",
-  type: "loop",                 // "scrubbed" or "loop"
-  video: "03-kitchen.mp4",      // lives in assets/video/
-  poster: "03-kitchen.jpg",     // optional, also in assets/video/
-  eyebrow: "THE KITCHEN",
-  title: "Made for Slow Mornings",
-  caption: "Stone counters, north light, and the quiet clatter of coffee at dawn."
+  number: "05",
+  id: "cuisine",
+  video: "05-cuisine.mp4",      // lives in assets/video/
+  poster: "05-cuisine.jpg",     // optional, also in assets/video/
+  eyebrow: "LA CUISINE",
+  title: "Faite pour les matins tranquilles",
+  caption: "Plans de travail en pierre, lumière du nord, et le doux cliquetis du café à l'aube.",
+  scrollVh: 280,
+  transitionIn: "whip-pan"
 }
 ```
 
@@ -95,15 +105,14 @@ Field reference:
 |------------|-----------------|--------------------------------------------------------------------|
 | `number`   | both            | Old-style numeral shown in the UI, e.g. `"03"`                     |
 | `id`       | both            | Unique slug — used as the section's DOM id / anchor                |
-| `type`     | both            | `"scrubbed"` (pinned, video tied to scroll) or `"loop"` (autoplay)  |
 | `video`    | both            | Filename in `assets/video/`                                        |
 | `poster`   | both, optional  | Filename in `assets/video/`, shown before video is ready            |
 | `eyebrow`  | both            | Small-caps label                                                   |
 | `title`    | both            | Big Fraunces headline / poetic line                                |
-| `caption`  | loop, optional  | Supporting body copy under the poetic title                        |
-| `cue`      | scrubbed, optional | Scroll-cue label (used on the hero: "Scroll to discover")       |
-| `scrollVh` | scrubbed, optional | Pin distance in vh, default `300`                                |
-| `transitionIn` | both, optional | `"whip-pan"` plays a brief directional-blur whip pan across this chapter and the one right before it, exactly when scroll crosses between them (either direction) — a "walking through the space" cut instead of a plain one. Omit for a plain cut. |
+| `caption`  | room, optional  | Supporting body copy under the poetic title                        |
+| `cue`      | hero, optional  | Scroll-cue label (used on the hero: "Scroll to discover")          |
+| `scrollVh` | both, optional  | Pin distance in vh (how long it stays pinned while its video scrubs), default `300` |
+| `transitionIn` | both, optional | `"whip-pan"` plays a brief directional-blur whip pan across this chapter and the one right before it, exactly when the pin releases from one into the other — a "walking through the space" cut instead of a plain one. Omit for a plain cut. |
 
 Order in the array is the order chapters appear on the page. Reload the
 page after saving — there's no build step to run.
