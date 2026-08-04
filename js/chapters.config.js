@@ -30,6 +30,10 @@
  *   title       Large Fraunces headline / poetic line for the chapter.
  *   caption     Room chapters only, optional — supporting body copy.
  *   cue         Optional scroll-cue label (hero only, typically).
+ *   features    Hero only, optional — array of short strings shown as a
+ *                subtle small-caps list with gold dividers, fading in once
+ *                the hero's video has scrubbed almost to its end and out
+ *                again just before the pin releases into the next chapter.
  *   scrollVh    Pin distance in vh — how long the chapter stays pinned
  *                while its video scrubs from start to end (default 300).
  *   transitionIn  Optional. "whip-pan" plays a brief directional-blur whip
@@ -45,10 +49,16 @@ window.CHAPTERS = [
     id: "hero",
     video: "01-hero.mp4",
     poster: "poster.jpg",
-    eyebrow: "ARRIVÉE",
+    eyebrow: "BIENVENUE",
     title: "Villa Selene",
     caption: "Un domaine privé sur les hauteurs, révélé souffle après souffle.",
     cue: "Défilez pour découvrir",
+    features: [
+      "Trois suites parentales",
+      "Piscine à débordement",
+      "Terrain de tennis privé",
+      "Deux dressings sur-mesure"
+    ],
     scrollVh: 300
   },
   {
@@ -58,7 +68,7 @@ window.CHAPTERS = [
     poster: "02-salon.jpg",
     eyebrow: "LE SALON",
     title: "Là où la lumière s'attarde",
-    caption: "La lumière glisse dans la pièce comme une marée lente, se posant dans chaque recoin où le jour commence et s'achève.",
+    caption: "Le calme, à perte de vue.",
     scrollVh: 280
   },
   {
@@ -67,7 +77,7 @@ window.CHAPTERS = [
     video: "03-salle-a-manger.mp4",
     poster: "03-salle-a-manger.jpg",
     eyebrow: "LA SALLE À MANGER",
-    title: "Là où les soirées s'attardent, sans hâte.",
+    title: "Un dîner suspendu au-dessus du monde.",
     scrollVh: 280,
     transitionIn: "whip-pan"
   },

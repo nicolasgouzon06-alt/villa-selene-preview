@@ -377,6 +377,33 @@ html.lenis.lenis-smooth { scroll-behavior: auto; }
   margin-top: 22px;
 }
 
+/* Hero-only, optional: a subtle refined list of key features, opacity
+   driven entirely by JS (scrub progress) — never a bold statement, so
+   no mask/rise treatment, just a plain crossfade. */
+.feature-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  list-style: none;
+  margin: 40px 0 0;
+  padding: 0;
+  max-width: 90vw;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.85);
+  opacity: 0;
+}
+
+.feature-list li + li::before {
+  content: "·";
+  color: var(--gold);
+  margin: 0 16px;
+}
+
 /* Generic masked-line reveal: outer wraps the mask (overflow hidden),
    inner carries the entrance transform. Kept generic (not scoped to one
    headline) so hero, loop, and future chapters all share it. */
@@ -577,6 +604,8 @@ html.lenis.lenis-smooth { scroll-behavior: auto; }
   .chapter__headline { font-size: clamp(38px, 12vw, 64px); }
   .progress-hairline { bottom: 76px; width: 120px; }
   .nav__links { display: none; }
+  .feature-list { font-size: 10px; letter-spacing: 0.12em; gap: 6px 0; }
+  .feature-list li + li::before { margin: 0 10px; }
 
   /* Mobile Ken Burns fallback for every chapter (poster only, no pin) */
   .media-frame.mobile-kenburns img {

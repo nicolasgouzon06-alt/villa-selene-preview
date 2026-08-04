@@ -107,12 +107,21 @@
     );
   }
 
-  // First chapter: full-bleed centered headline + optional scroll cue.
+  // First chapter: full-bleed centered headline + optional scroll cue +
+  // optional feature list (revealed near the end of the scrub, once the
+  // building is fully visible).
   function buildHeroLayout(chapter) {
     return (
       '<div class="chapter__overlay">' +
         '<span class="eyebrow eyebrow--light">' + escapeHtml(chapter.eyebrow) + "</span>" +
         '<h1 class="chapter__headline" data-headline>' + wrapWordLines(chapter.title) + "</h1>" +
+        (chapter.features && chapter.features.length
+          ? '<ul class="feature-list" data-feature-list>' +
+            chapter.features
+              .map(function (item) { return "<li>" + escapeHtml(item) + "</li>"; })
+              .join("") +
+            "</ul>"
+          : "") +
         (chapter.cue
           ? '<div class="scroll-cue" data-scroll-cue><span class="scroll-cue__line"></span><span class="scroll-cue__label">' +
             escapeHtml(chapter.cue) +
@@ -425,6 +434,7 @@
     var fill = section.querySelector("[data-progress-fill]");
     var cue = section.querySelector("[data-scroll-cue]");
     var hairline = section.querySelector("[data-progress-hairline]");
+    var featureList = section.querySelector("[data-feature-list]"); // hero only, optional
 
     // Every chapter loads its video eagerly (not lazily) since scrubbing
     // needs it seekable as soon as the pin engages, never autoplays or
@@ -487,6 +497,15 @@
       if (eyebrow) eyebrow.style.opacity = String(1 - outT);
       if (fill) fill.style.width = Math.round(p * 100) + "%";
       if (cue) cue.style.opacity = String(Math.max(0, 1 - p / 0.05));
+      // Feature list: appears once the building is fully revealed, near
+      // the end of the scrub, then dissolves again just before the pin
+      // releases into the next chapter — a subtle beat, not another
+      // headline moment, so a plain fade is enough (no mask/rise).
+      if (featureList) {
+        var featureIn = Math.max(0, Math.min(1, (p - 0.72) / 0.1));
+        var featureOut = Math.max(0, Math.min(1, (p - 0.9) / 0.1));
+        featureList.style.opacity = String(Math.max(0, featureIn - featureOut));
+      }
     }
 
     if (PREFERS_REDUCED || IS_MOBILE || !HAS_GSAP) {
@@ -496,6 +515,7 @@
       media.frame.classList.add("mobile-kenburns");
       if (hairline) hairline.style.display = "none";
       if (cue) cue.style.display = "none";
+      if (featureList) featureList.style.opacity = 1;
       if (media.video) media.video.remove();
       playEntrance();
       return;
