@@ -452,6 +452,11 @@
       progress: 0,
       target: 0,
       video: media.video,
+      // Hard safety switch: true only while THIS chapter is the one
+      // actually pinned/active on screen (per GSAP's own self.isActive,
+      // not our progress math). The hero is exempt — it's on screen from
+      // the very first frame, nothing can bleed onto it from "before".
+      isActive: isHero,
     };
 
     // Guards applyChoreography's eyebrow line below: until this chapter's
@@ -503,19 +508,29 @@
     // scroll distance — text now tracks what the video is actually
     // showing on screen at that instant, instead of drifting out of sync
     // with it whenever the lerp is still catching up to a fast scroll.
-    function applyChoreography(p) {
+    //
+    // `active` is the hard override: whatever the progress math above
+    // says, a room chapter's text is forced fully invisible the instant
+    // it isn't the one actually pinned on screen. This is what actually
+    // stops one chapter's text from ever showing over another chapter's
+    // video — the fade-out timing above handles the *normal* case, this
+    // is the backstop for scroll jumps (fast trackpad flicks, nav-link
+    // jumps, refreshing mid-scroll) where progress math alone can lag or
+    // race behind GSAP's own idea of which chapter is active.
+    function applyChoreography(p, active) {
       var outT = Math.max(0, Math.min(1, (p - outStart) / outDuration));
+      var textVisible = isHero || active;
       outerLines.forEach(function (line, i) {
         var localOut = Math.max(0, Math.min(1, outT - i * 0.04));
-        line.style.opacity = String(1 - localOut);
+        line.style.opacity = textVisible ? String(1 - localOut) : "0";
         line.style.transform = "translateY(" + -24 * localOut + "%)";
       });
       bodyOuterLines.forEach(function (line, i) {
         var localOut = Math.max(0, Math.min(1, outT - i * 0.04));
-        line.style.opacity = String(1 - localOut);
+        line.style.opacity = textVisible ? String(1 - localOut) : "0";
         line.style.transform = "translateY(" + -24 * localOut + "%)";
       });
-      if (eyebrow && hasEntered) eyebrow.style.opacity = String(1 - outT);
+      if (eyebrow && hasEntered) eyebrow.style.opacity = textVisible ? String(1 - outT) : "0";
       if (fill) fill.style.width = Math.round(p * 100) + "%";
       if (cue) cue.style.opacity = String(Math.max(0, 1 - p / 0.05));
       // Feature list: appears once the building is fully revealed, near
@@ -542,8 +557,12 @@
       return;
     }
 
-    applyChoreography(0);
+    applyChoreography(0, state.isActive);
     if (isHero) playEntrance();
+
+    function markInactive() {
+      state.isActive = false;
+    }
 
     ScrollTrigger.create({
       trigger: section,
@@ -553,11 +572,14 @@
       pinSpacing: true,
       onEnter: isHero ? undefined : playEntrance,
       onEnterBack: isHero ? undefined : playEntrance,
+      onLeave: isHero ? undefined : markInactive,
+      onLeaveBack: isHero ? undefined : markInactive,
       onUpdate: function (self) {
         // Only records where the scroll wants the video to be — the
         // shared rAF loop below both moves the video toward it AND
         // drives the text choreography, so both stay in lockstep.
         state.target = self.progress;
+        if (!isHero) state.isActive = self.isActive;
       },
     });
 
@@ -580,7 +602,7 @@
             video.currentTime = t;
           }
         }
-        state.applyChoreography(state.progress);
+        state.applyChoreography(state.progress, state.isActive);
       });
       requestAnimationFrame(tick);
     }
