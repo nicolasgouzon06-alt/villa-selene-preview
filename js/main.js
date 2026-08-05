@@ -491,11 +491,20 @@
       }
     }
 
-    // Scroll-driven fade-out only: as the room is revealed (~30-46% of
-    // the pin's progress) the text lifts and dissolves, clearing the
-    // frame before the video scrubs to its end and the pin releases.
+    // Fade-out timing: the hero's headline dissolves early (~30-46%) as
+    // the descent plays — that beat is about the video, not the text.
+    // Room chapters get a much later window (~72-88%) so the eyebrow +
+    // poetic line actually stay readable through most of the room's
+    // reveal, only clearing right before the pin releases.
+    var outStart = isHero ? 0.3 : 0.72;
+    var outDuration = 0.16;
+
+    // Driven by the *lerped* scrub progress (see startScrubLoop), not raw
+    // scroll distance — text now tracks what the video is actually
+    // showing on screen at that instant, instead of drifting out of sync
+    // with it whenever the lerp is still catching up to a fast scroll.
     function applyChoreography(p) {
-      var outT = Math.max(0, Math.min(1, (p - 0.3) / 0.16));
+      var outT = Math.max(0, Math.min(1, (p - outStart) / outDuration));
       outerLines.forEach(function (line, i) {
         var localOut = Math.max(0, Math.min(1, outT - i * 0.04));
         line.style.opacity = String(1 - localOut);
@@ -545,16 +554,21 @@
       onEnter: isHero ? undefined : playEntrance,
       onEnterBack: isHero ? undefined : playEntrance,
       onUpdate: function (self) {
+        // Only records where the scroll wants the video to be — the
+        // shared rAF loop below both moves the video toward it AND
+        // drives the text choreography, so both stay in lockstep.
         state.target = self.progress;
-        applyChoreography(self.progress);
       },
     });
 
+    state.applyChoreography = applyChoreography;
     scrubStates.push(state);
   }
 
   // Single shared rAF loop drives the weighted (lerped) video scrub for
-  // every scrubbed chapter, so currentTime never jitters with scroll.
+  // every scrubbed chapter, so currentTime never jitters with scroll —
+  // and drives each chapter's text choreography off that same lerped
+  // value, so text timing always matches what's actually on screen.
   function startScrubLoop() {
     function tick() {
       scrubStates.forEach(function (state) {
@@ -566,6 +580,7 @@
             video.currentTime = t;
           }
         }
+        state.applyChoreography(state.progress);
       });
       requestAnimationFrame(tick);
     }
