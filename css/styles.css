@@ -70,6 +70,13 @@ html.lenis.lenis-smooth { scroll-behavior: auto; }
 .eyebrow--light { color: var(--ivory); }
 .eyebrow--light::before { background: var(--gold); }
 
+/* Room chapters' eyebrow only gets its opacity/position set by JS once
+   its own chapter's entrance actually plays (on pin-engage, not before)
+   — without this default, it sits fully visible from page load, showing
+   through while the chapter is still approaching (scrolled into view but
+   not yet pinned), on top of whichever chapter is still on screen. */
+[data-eyebrow] { opacity: 0; }
+
 /* ============================= PRELOADER ============================= */
 
 #preloader {

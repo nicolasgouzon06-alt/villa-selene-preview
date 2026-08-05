@@ -454,10 +454,22 @@
       video: media.video,
     };
 
+    // Guards applyChoreography's eyebrow line below: until this chapter's
+    // own entrance has actually played, the eyebrow must stay at its CSS
+    // default (opacity: 0) rather than have applyChoreography(0) — called
+    // synchronously for every chapter on load — snap it to "fully visible,
+    // no fade-out yet" via an inline style, which showed it right through
+    // the still-approaching (not yet pinned) chapter, over whichever
+    // chapter is still on screen. Title/body don't need this guard: their
+    // masked-line inner spans have their own CSS opacity:0 default that
+    // applyChoreography never touches, so they're already hidden pre-entrance.
+    var hasEntered = isHero;
+
     // Text entrance: fades/rises in as the chapter's pin engages (the
     // hero plays it immediately on load instead, since it's already
     // in view before any scrolling happens).
     function playEntrance() {
+      hasEntered = true;
       if (HAS_GSAP) {
         // gsap.set() first: GSAP's yPercent tracking needs an explicit
         // baseline — it can't infer the starting offset from the CSS
@@ -494,7 +506,7 @@
         line.style.opacity = String(1 - localOut);
         line.style.transform = "translateY(" + -24 * localOut + "%)";
       });
-      if (eyebrow) eyebrow.style.opacity = String(1 - outT);
+      if (eyebrow && hasEntered) eyebrow.style.opacity = String(1 - outT);
       if (fill) fill.style.width = Math.round(p * 100) + "%";
       if (cue) cue.style.opacity = String(Math.max(0, 1 - p / 0.05));
       // Feature list: appears once the building is fully revealed, near
